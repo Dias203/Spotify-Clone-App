@@ -9,27 +9,23 @@ abstract class SongFirebaseService {
   Future<Either> getPlayList();
 }
 
-
-class SongFireBaseServiceImpl extends SongFirebaseService{
-  
-  
+class SongFireBaseServiceImpl extends SongFirebaseService {
   @override
   Future<Either> getNewsSongs() async {
     try {
       List<SongEntity> songs = [];
-      var data = await FirebaseFirestore.instance.collection('Songs')
+      var data = await FirebaseFirestore.instance
+          .collection('Songs')
           .orderBy('releaseDate', descending: true)
+          .limit(5)
           .get();
 
       for (var element in data.docs) {
         var songModel = SongModel.fromJson(element.data());
-        songs.add(
-            songModel.toEntity()
-        );
+        songs.add(songModel.toEntity());
       }
       return Right(songs);
-    }
-    catch (e){
+    } catch (e) {
       return Left('An error occurred, Please try again!');
     }
   }
@@ -38,21 +34,18 @@ class SongFireBaseServiceImpl extends SongFirebaseService{
   Future<Either> getPlayList() async {
     try {
       List<SongEntity> songs = [];
-      var data = await FirebaseFirestore.instance.collection('Songs')
+      var data = await FirebaseFirestore.instance
+          .collection('Songs')
           .orderBy('releaseDate', descending: true)
           .get();
 
       for (var element in data.docs) {
         var songModel = SongModel.fromJson(element.data());
-        songs.add(
-            songModel.toEntity()
-        );
+        songs.add(songModel.toEntity());
       }
       return Right(songs);
-    }
-    catch (e){
+    } catch (e) {
       return Left('An error occurred, Please try again!');
     }
   }
-  
 }
