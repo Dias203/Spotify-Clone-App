@@ -6,7 +6,7 @@ import 'package:spotify_clone/core/configs/assets/app_vectors.dart';
 import 'package:spotify_clone/data/models/auth/signin_user_req.dart';
 import 'package:spotify_clone/domain/usecases/auth/signin.dart';
 import 'package:spotify_clone/presentation/auth/pages/signup.dart';
-import 'package:spotify_clone/presentation/root/pages/root.dart';
+import 'package:spotify_clone/presentation/home/pages/home.dart';
 import 'package:spotify_clone/service_locator.dart';
 
 class SignInPage extends StatefulWidget {
@@ -69,7 +69,7 @@ class _SignInPageState extends State<SignInPage> {
                       await Future.delayed(const Duration(seconds: 2));
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const RootPage()),
+                        MaterialPageRoute(builder: (context) => HomePage()),
                             (route) => false,
                       );
                     },

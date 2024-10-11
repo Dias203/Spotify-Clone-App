@@ -17,7 +17,7 @@ class SongFireBaseServiceImpl extends SongFirebaseService{
       List<SongEntity> songs = [];
       var data = await FirebaseFirestore.instance.collection('Songs')
           .orderBy('releaseDate', descending: true)
-          .limit(3)
+          .limit(4)
           .get();
 
       for (var element in data.docs) {
