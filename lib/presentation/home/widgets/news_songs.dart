@@ -6,6 +6,7 @@ import 'package:spotify_clone/core/configs/theme/app_colors.dart';
 import 'package:spotify_clone/domain/entities/song/song.dart';
 import 'package:spotify_clone/presentation/home/bloc/news_songs_cubit.dart';
 import 'package:spotify_clone/presentation/home/bloc/news_songs_state.dart';
+import 'package:spotify_clone/presentation/song_player/pages/song_player.dart';
 
 class NewsSongs extends StatelessWidget {
   const NewsSongs({super.key});
@@ -20,8 +21,9 @@ class NewsSongs extends StatelessWidget {
             builder: (context, state) {
               if (state is NewsSongsLoading) {
                 return Container(
-                    alignment: Alignment.center,
-                    child: const CircularProgressIndicator());
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                );
               }
 
               if (state is NewsSongsLoaded) {
@@ -40,7 +42,14 @@ class NewsSongs extends StatelessWidget {
         shrinkWrap: true,
         itemBuilder: (context, index) {
           return GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SongPlayerPage(songEntity:  songs[index],),
+                ),
+              );
+            },
             child: SizedBox(
               width: 160,
               child: Column(
