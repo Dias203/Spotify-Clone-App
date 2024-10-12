@@ -10,7 +10,7 @@ import 'package:spotify_clone/presentation/song_player/bloc/song_player_state.da
 class SongPlayerPage extends StatefulWidget {
   final SongEntity songEntity;
 
-  const SongPlayerPage({required this.songEntity, super.key, required List<SongEntity> playlist});
+  const SongPlayerPage({required this.songEntity, super.key});
 
   @override
   _SongPlayerPageState createState() => _SongPlayerPageState();
