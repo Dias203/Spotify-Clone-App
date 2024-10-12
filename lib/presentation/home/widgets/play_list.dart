@@ -128,7 +128,8 @@ class PlayList extends StatelessWidget {
                         // handler event click favorite icon button
                       },
                       icon: const Icon(
-                        Icons.favorite_rounded,
+                        Icons.favorite_outline_outlined,
+                        size: 30,
                         color: AppColors.darkGrey,
                       ),
                     )
