@@ -1,6 +1,5 @@
-// song_player_state.dart
-
 import 'package:equatable/equatable.dart';
+import 'package:spotify_clone/domain/entities/song/song.dart';
 
 abstract class SongPlayerState extends Equatable {
   const SongPlayerState();
@@ -12,18 +11,20 @@ abstract class SongPlayerState extends Equatable {
 class SongPlayerLoading extends SongPlayerState {}
 
 class SongPlayerLoaded extends SongPlayerState {
+  final SongEntity currentSong;
   final Duration songPosition;
   final Duration songDuration;
   final bool isPlaying;
 
   const SongPlayerLoaded({
+    required this.currentSong,
     required this.songPosition,
     required this.songDuration,
     required this.isPlaying,
   });
 
   @override
-  List<Object> get props => [songPosition, songDuration, isPlaying];
+  List<Object> get props => [currentSong, songPosition, songDuration, isPlaying];
 }
 
 class SongPlayerFailure extends SongPlayerState {

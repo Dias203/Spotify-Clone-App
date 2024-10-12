@@ -1,3 +1,5 @@
+// song_player_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotify_clone/common/widgets/appbar/app_bar.dart';
@@ -8,9 +10,15 @@ import 'package:spotify_clone/presentation/song_player/bloc/song_player_cubit.da
 import 'package:spotify_clone/presentation/song_player/bloc/song_player_state.dart';
 
 class SongPlayerPage extends StatefulWidget {
-  final SongEntity songEntity;
+  final List<SongEntity> playlist;
+  final int initialIndex;
 
-  const SongPlayerPage({required this.songEntity, super.key});
+  const SongPlayerPage({
+    required this.playlist,
+    this.initialIndex = 0,
+    super.key,
+    required SongEntity songEntity,
+  });
 
   @override
   _SongPlayerPageState createState() => _SongPlayerPageState();
@@ -29,14 +37,14 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
           style: TextStyle(fontSize: 18),
         ),
         action: IconButton(
-          onPressed: () {},
+          onPressed: () {
+          },
           icon: const Icon(Icons.more_vert_rounded),
         ),
       ),
       body: BlocProvider(
-        create: (_) => SongPlayerCubit()
-          ..loadSong(
-              '${AppURLs.songFirestorage}${widget.songEntity.artist} - ${widget.songEntity.title}.mp3?${AppURLs.mediaAlt}'),
+        create: (_) => SongPlayerCubit(playlist: widget.playlist)
+          ..loadSongAtIndex(widget.initialIndex),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
@@ -58,51 +66,71 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
   }
 
   Widget _songCover(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height / 2,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        image: DecorationImage(
-          fit: BoxFit.cover,
-          image: NetworkImage(
-            '${AppURLs.coverFirestorage}${widget.songEntity.artist} - ${widget.songEntity.title}.jpg?${AppURLs.mediaAlt}',
-          ),
-        ),
-      ),
+    return BlocBuilder<SongPlayerCubit, SongPlayerState>(
+      builder: (context, state) {
+        if (state is SongPlayerLoaded) {
+          return Container(
+            height: MediaQuery.of(context).size.height / 2,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(
+                  '${AppURLs.coverFirestorage}${state.currentSong.artist} - ${state.currentSong.title}.jpg?${AppURLs.mediaAlt}',
+                ),
+              ),
+            ),
+          );
+        }
+        return Container(
+          height: MediaQuery.of(context).size.height / 2,
+          color: Colors.grey,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      },
     );
   }
 
   Widget _songDetail() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.songEntity.title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            Text(
-              widget.songEntity.artist,
-              style: const TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
-            ),
-          ],
-        ),
-        IconButton(
-          onPressed: () {
-            // handler event click favorite icon button
-          },
-          icon: const Icon(
-            Icons.favorite_outline_outlined,
-            size: 35,
-            color: AppColors.darkGrey,
-          ),
-        )
-      ],
+    return BlocBuilder<SongPlayerCubit, SongPlayerState>(
+      builder: (context, state) {
+        if (state is SongPlayerLoaded) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    state.currentSong.title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 22),
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    state.currentSong.artist,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w400, fontSize: 14),
+                  ),
+                ],
+              ),
+              IconButton(
+                onPressed: () {
+                  // Xử lý sự kiện khi nhấn vào nút yêu thích
+                },
+                icon: const Icon(
+                  Icons.favorite_outline_outlined,
+                  size: 35,
+                  color: AppColors.darkGrey,
+                ),
+              )
+            ],
+          );
+        }
+        return Container();
+      },
     );
   }
 
@@ -124,7 +152,7 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
               Slider(
                 value: currentPosition.clamp(0.0, totalDuration),
                 min: 0.0,
-                max: totalDuration > 0 ? totalDuration : 1.0,
+                max: totalDuration > 0 ? totalDuration : 1.0, // Tránh max = 0
                 onChanged: (value) {
                   setState(() {
                     _isSeeking = true;
@@ -132,7 +160,9 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
                   });
                 },
                 onChangeEnd: (value) {
-                  context.read<SongPlayerCubit>().seek(Duration(milliseconds: value.toInt()));
+                  context.read<SongPlayerCubit>().seek(
+                        Duration(milliseconds: value.toInt()),
+                      );
                   setState(() {
                     _isSeeking = false;
                   });
@@ -144,29 +174,51 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(formatDuration(Duration(milliseconds: currentPosition.toInt()))),
+                  Text(formatDuration(
+                      Duration(milliseconds: currentPosition.toInt()))),
                   Text(formatDuration(state.songDuration)),
                 ],
               ),
               const SizedBox(
                 height: 10,
               ),
-              GestureDetector(
-                onTap: () {
-                  context.read<SongPlayerCubit>().playOrPause();
-                },
-                child: Container(
-                  height: 60,
-                  width: 60,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    iconSize: 40,
+                    icon: const Icon(Icons.skip_previous),
+                    onPressed: () {
+                      context.read<SongPlayerCubit>().playPrevious();
+                    },
                   ),
-                  child: Icon(
-                    state.isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
+                  const SizedBox(width: 20),
+                  GestureDetector(
+                    onTap: () {
+                      context.read<SongPlayerCubit>().playOrPause();
+                    },
+                    child: Container(
+                      height: 60,
+                      width: 60,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary,
+                      ),
+                      child: Icon(
+                        state.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 20),
+                  IconButton(
+                    iconSize: 40,
+                    icon: const Icon(Icons.skip_next),
+                    onPressed: () {
+                      context.read<SongPlayerCubit>().playNext();
+                    },
+                  ),
+                ],
               )
             ],
           );
