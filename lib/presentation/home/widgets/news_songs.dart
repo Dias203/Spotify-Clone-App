@@ -46,7 +46,7 @@ class NewsSongs extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SongPlayerPage(songEntity:  songs[index],),
+                  builder: (context) => SongPlayerPage(songEntity:  songs[index], playlist: [],),
                 ),
               );
             },

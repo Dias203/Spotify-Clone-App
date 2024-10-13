@@ -9,16 +9,54 @@ import 'package:spotify_clone/presentation/song_player/bloc/song_player_state.da
 
 class SongPlayerPage extends StatefulWidget {
   final SongEntity songEntity;
+  final List<SongEntity> playlist; // Danh sách bài hát
 
-  const SongPlayerPage({required this.songEntity, super.key});
+  const SongPlayerPage({
+    required this.songEntity,
+    required this.playlist,
+    super.key,
+  });
 
   @override
   _SongPlayerPageState createState() => _SongPlayerPageState();
 }
 
 class _SongPlayerPageState extends State<SongPlayerPage> {
-  double _sliderValue = 0.0;
-  bool _isSeeking = false;
+  int currentIndex = 0; // Vị trí hiện tại trong danh sách bài hát
+
+  @override
+  void initState() {
+    super.initState();
+    // Tìm vị trí bài hát hiện tại trong playlist
+    currentIndex = widget.playlist.indexOf(widget.songEntity);
+  }
+
+  // Chuyển đến bài hát tiếp theo
+  void _nextSong() {
+    setState(() {
+      if (currentIndex < widget.playlist.length - 1) {
+        currentIndex++;
+        _loadSong();
+      }
+    });
+  }
+
+  // Chuyển về bài hát trước đó
+  void _previousSong() {
+    setState(() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        _loadSong();
+      }
+    });
+  }
+
+  // Tải bài hát mới từ playlist
+  void _loadSong() {
+    final song = widget.playlist[currentIndex];
+    context.read<SongPlayerCubit>().loadSong(
+        '${AppURLs.songFirestorage}${song.artist} - ${song.title}.mp3?${AppURLs.mediaAlt}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +80,13 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
           child: Column(
             children: [
               _songCover(context),
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
               _songDetail(),
-              const SizedBox(height: 30),
+              const SizedBox(
+                height: 30,
+              ),
               _songPlayer(context),
             ],
           ),
@@ -107,55 +149,63 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
           return const CircularProgressIndicator();
         }
         if (state is SongPlayerLoaded) {
-          double currentPosition = _isSeeking
-              ? _sliderValue
-              : state.songPosition.inMilliseconds.toDouble();
-          double totalDuration = state.songDuration.inMilliseconds.toDouble();
-
+          // Hiển thị giao diện điều khiển bài hát với các nút Next, Back
           return Column(
             children: [
               Slider(
-                value: currentPosition.clamp(0.0, totalDuration),
+                value: state.songPosition.inMilliseconds.toDouble(),
                 min: 0.0,
-                max: totalDuration > 0 ? totalDuration : 1.0,
+                max: state.songDuration.inMilliseconds.toDouble(),
                 onChanged: (value) {
-                  setState(() {
-                    _isSeeking = true;
-                    _sliderValue = value;
-                  });
-                },
-                onChangeEnd: (value) {
-                  context.read<SongPlayerCubit>().seek(Duration(milliseconds: value.toInt()));
-                  setState(() {
-                    _isSeeking = false;
-                  });
+                  context
+                      .read<SongPlayerCubit>()
+                      .seek(Duration(milliseconds: value.toInt()));
                 },
               ),
-              const SizedBox(height: 5),
+              const SizedBox(
+                height: 10,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(formatDuration(Duration(milliseconds: currentPosition.toInt()))),
+                  Text(formatDuration(state.songPosition)),
                   Text(formatDuration(state.songDuration)),
                 ],
               ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () {
-                  context.read<SongPlayerCubit>().playOrPause();
-                },
-                child: Container(
-                  height: 60,
-                  width: 60,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary,
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: _previousSong, // Nút quay lại bài trước
+                    icon: const Icon(Icons.skip_previous, size: 40),
                   ),
-                  child: Icon(
-                    state.isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      context.read<SongPlayerCubit>().playOrPause();
+                    },
+                    child: Container(
+                      height: 60,
+                      width: 60,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary,
+                      ),
+                      child: Icon(
+                        state.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    onPressed: _nextSong, // Nút tới bài tiếp theo
+                    icon: const Icon(Icons.skip_next, size: 40),
+                  ),
+                ],
               ),
             ],
           );
