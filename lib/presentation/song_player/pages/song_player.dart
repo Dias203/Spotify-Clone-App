@@ -1,3 +1,5 @@
+// song_player_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotify_clone/common/widgets/appbar/app_bar.dart';
@@ -8,13 +10,13 @@ import 'package:spotify_clone/presentation/song_player/bloc/song_player_cubit.da
 import 'package:spotify_clone/presentation/song_player/bloc/song_player_state.dart';
 
 class SongPlayerPage extends StatefulWidget {
-  final SongEntity songEntity;
-  final List<SongEntity> playlist; // Danh sách bài hát
+  final List<SongEntity> playlist;
+  final int initialIndex;
 
   const SongPlayerPage({
-    required this.songEntity,
     required this.playlist,
-    super.key,
+    this.initialIndex = 0,
+    super.key, required SongEntity songEntity,
   });
 
   @override
@@ -22,41 +24,8 @@ class SongPlayerPage extends StatefulWidget {
 }
 
 class _SongPlayerPageState extends State<SongPlayerPage> {
-  int currentIndex = 0; // Vị trí hiện tại trong danh sách bài hát
-
-  @override
-  void initState() {
-    super.initState();
-    // Tìm vị trí bài hát hiện tại trong playlist
-    currentIndex = widget.playlist.indexOf(widget.songEntity);
-  }
-
-  // Chuyển đến bài hát tiếp theo
-  void _nextSong() {
-    setState(() {
-      if (currentIndex < widget.playlist.length - 1) {
-        currentIndex++;
-        _loadSong();
-      }
-    });
-  }
-
-  // Chuyển về bài hát trước đó
-  void _previousSong() {
-    setState(() {
-      if (currentIndex > 0) {
-        currentIndex--;
-        _loadSong();
-      }
-    });
-  }
-
-  // Tải bài hát mới từ playlist
-  void _loadSong() {
-    final song = widget.playlist[currentIndex];
-    context.read<SongPlayerCubit>().loadSong(
-        '${AppURLs.songFirestorage}${song.artist} - ${song.title}.mp3?${AppURLs.mediaAlt}');
-  }
+  double _sliderValue = 0.0;
+  bool _isSeeking = false;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +33,7 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
       appBar: BasicAppbar(
         title: const Text(
           'Now playing',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 18),
         ),
         action: IconButton(
           onPressed: () {},
@@ -72,22 +41,17 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
         ),
       ),
       body: BlocProvider(
-        create: (_) => SongPlayerCubit()
-          ..loadSong(
-              '${AppURLs.songFirestorage}${widget.songEntity.artist} - ${widget.songEntity.title}.mp3?${AppURLs.mediaAlt}'),
+        create: (_) => SongPlayerCubit(playlist: widget.playlist)
+          ..loadSongAtIndex(widget.initialIndex),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
             children: [
-              _songCover(context),
-              const SizedBox(
-                height: 20,
-              ),
+              _songCover(),
+              const SizedBox(height: 20),
               _songDetail(),
-              const SizedBox(
-                height: 30,
-              ),
-              _songPlayer(context),
+              const SizedBox(height: 30),
+              _songPlayer(),
             ],
           ),
         ),
@@ -95,94 +59,129 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
     );
   }
 
-  Widget _songCover(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height / 2,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        image: DecorationImage(
-          fit: BoxFit.cover,
-          image: NetworkImage(
-            '${AppURLs.coverFirestorage}${widget.songEntity.artist} - ${widget.songEntity.title}.jpg?${AppURLs.mediaAlt}',
-          ),
-        ),
-      ),
+  Widget _songCover() {
+    return BlocBuilder<SongPlayerCubit, SongPlayerState>(
+      builder: (context, state) {
+        if (state is SongPlayerLoaded) {
+          return Container(
+            height: MediaQuery.of(context).size.height / 2,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(
+                  '${AppURLs.coverFirestorage}${state.currentSong.artist} - ${state.currentSong.title}.jpg?${AppURLs.mediaAlt}',
+                ),
+              ),
+            ),
+          );
+        }
+        return Container(
+          height: MediaQuery.of(context).size.height / 2,
+          color: Colors.grey,
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      },
     );
   }
 
   Widget _songDetail() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.songEntity.title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              widget.songEntity.artist,
-              style: const TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
-            ),
-          ],
-        ),
-        IconButton(
-          onPressed: () {
-            // handler event click favorite icon button
-          },
-          icon: const Icon(
-            Icons.favorite_outline_outlined,
-            size: 35,
-            color: AppColors.darkGrey,
-          ),
-        )
-      ],
+    return BlocBuilder<SongPlayerCubit, SongPlayerState>(
+      builder: (context, state) {
+        if (state is SongPlayerLoaded) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    state.currentSong.title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 22),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    state.currentSong.artist,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w400, fontSize: 14),
+                  ),
+                ],
+              ),
+              IconButton(
+                onPressed: () {
+                  // Xử lý sự kiện khi nhấn vào nút yêu thích
+                },
+                icon: const Icon(
+                  Icons.favorite_outline_outlined,
+                  size: 35,
+                  color: AppColors.darkGrey,
+                ),
+              )
+            ],
+          );
+        }
+        return Container();
+      },
     );
   }
 
-  Widget _songPlayer(BuildContext context) {
+  Widget _songPlayer() {
     return BlocBuilder<SongPlayerCubit, SongPlayerState>(
       builder: (context, state) {
         if (state is SongPlayerLoading) {
           return const CircularProgressIndicator();
         }
         if (state is SongPlayerLoaded) {
-          // Hiển thị giao diện điều khiển bài hát với các nút Next, Back
+          // Nếu đang kéo thanh trượt, sử dụng giá trị từ biến cục bộ
+          double currentPosition = _isSeeking
+              ? _sliderValue
+              : state.songPosition.inMilliseconds.toDouble();
+          double totalDuration =
+              state.songDuration.inMilliseconds.toDouble();
+
           return Column(
             children: [
               Slider(
-                value: state.songPosition.inMilliseconds.toDouble(),
+                value: currentPosition.clamp(0.0, totalDuration),
                 min: 0.0,
-                max: state.songDuration.inMilliseconds.toDouble(),
+                max: totalDuration > 0 ? totalDuration : 1.0, // Tránh max = 0
                 onChanged: (value) {
-                  context
-                      .read<SongPlayerCubit>()
-                      .seek(Duration(milliseconds: value.toInt()));
+                  setState(() {
+                    _isSeeking = true;
+                    _sliderValue = value;
+                  });
+                },
+                onChangeEnd: (value) {
+                  context.read<SongPlayerCubit>().seek(
+                        Duration(milliseconds: value.toInt()),
+                      );
+                  setState(() {
+                    _isSeeking = false;
+                  });
                 },
               ),
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(formatDuration(state.songPosition)),
+                  Text(formatDuration(
+                      Duration(milliseconds: currentPosition.toInt()))),
                   Text(formatDuration(state.songDuration)),
                 ],
               ),
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    onPressed: _previousSong, // Nút quay lại bài trước
-                    icon: const Icon(Icons.skip_previous, size: 40),
+                    iconSize: 40,
+                    icon: const Icon(Icons.skip_previous),
+                    onPressed: () {
+                      context.read<SongPlayerCubit>().playPrevious();
+                    },
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 20),
                   GestureDetector(
                     onTap: () {
                       context.read<SongPlayerCubit>().playOrPause();
@@ -200,13 +199,16 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 20),
                   IconButton(
-                    onPressed: _nextSong, // Nút tới bài tiếp theo
-                    icon: const Icon(Icons.skip_next, size: 40),
+                    iconSize: 40,
+                    icon: const Icon(Icons.skip_next),
+                    onPressed: () {
+                      context.read<SongPlayerCubit>().playNext();
+                    },
                   ),
                 ],
-              ),
+              )
             ],
           );
         }

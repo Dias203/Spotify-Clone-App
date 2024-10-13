@@ -69,7 +69,7 @@ class PlayList extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => SongPlayerPage(
-                    songEntity: songs[index], playlist: [],
+                    songEntity: songs[index], playlist: songs,
                   ),
                 ),
               );
