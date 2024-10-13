@@ -147,7 +147,7 @@ class SongPlayerCubit extends Cubit<SongPlayerState> {
     if (playlist.isEmpty) return;
 
     if (audioPlayer.playing) {
-      audioPlayer.pause();
+      audioPlayer.stop();
     } else {
       // Nếu bài hát đã kết thúc, tua lại từ đầu trước khi phát
       if (audioPlayer.position >= (audioPlayer.duration ?? Duration.zero)) {
