@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotify_clone/common/widgets/appbar/app_bar.dart';
+import 'package:spotify_clone/common/widgets/favorite_button/favorite_button.dart';
 import 'package:spotify_clone/core/configs/constants/app_urls.dart';
 import 'package:spotify_clone/core/configs/theme/app_colors.dart';
 import 'package:spotify_clone/domain/entities/song/song.dart';
@@ -94,16 +95,7 @@ class _SongPlayerPageState extends State<SongPlayerPage> {
             ),
           ],
         ),
-        IconButton(
-          onPressed: () {
-            // Xử lý sự kiện khi nhấn vào nút yêu thích
-          },
-          icon: const Icon(
-            Icons.favorite_outline_outlined,
-            size: 35,
-            color: AppColors.darkGrey,
-          ),
-        )
+        FavoriteButton(songEntity: widget.songEntity)
       ],
     );
   }
