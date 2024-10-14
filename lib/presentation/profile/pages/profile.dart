@@ -13,16 +13,14 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const BasicAppbar(
-        backgroundColor: Color(0xff2C2B2B) ,
-        title: Text(
-          'Profile'
-        ),
+        backgroundColor: Color(0xff2C2B2B),
+        title: Text('Profile'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           _profileInfo(context),
-           const SizedBox(height: 30,)
+          _profileInfo(context),
+          const SizedBox(height: 30,),
         ],
       ),
     );
@@ -32,63 +30,62 @@ class ProfilePage extends StatelessWidget {
     return BlocProvider(
       create: (context) => ProfileInfoCubit()..getUser(),
       child: Container(
-        height: MediaQuery.of(context).size.height / 3.5 ,
+        height: MediaQuery.of(context).size.height / 3.5,
         width: double.infinity,
         decoration: BoxDecoration(
           color: context.isDarkMode ? const Color(0xff2C2B2B) : Colors.white,
           borderRadius: const BorderRadius.only(
             bottomRight: Radius.circular(50),
-            bottomLeft: Radius.circular(50)
-          )
+            bottomLeft: Radius.circular(50),
+          ),
         ),
-        child: BlocBuilder<ProfileInfoCubit,ProfileInfoState>(
-        builder: (context, state) {
-          if(state is ProfileInfoLoading) {
-            return Container(
-              alignment: Alignment.center,
-              child: const CircularProgressIndicator()
-            );
-          } 
-          if(state is ProfileInfoLoaded) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 90,
-                  width: 90,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        state.userEntity.imageURL!
-                      )
-                    )
+        child: BlocBuilder<ProfileInfoCubit, ProfileInfoState>(
+          builder: (context, state) {
+            if (state is ProfileInfoLoading) {
+              return Container(
+                alignment: Alignment.center,
+                child: const CircularProgressIndicator(),
+              );
+            }
+            if (state is ProfileInfoLoaded) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 90,
+                    width: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: NetworkImage(state.userEntity.imageURL!),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 15,),
-                Text(
-                  state.userEntity.email!
-                ),
-                const SizedBox(height: 10,),
-                Text(
-                  state.userEntity.fullName!,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold
+                  const SizedBox(height: 15,),
+                  Text(state.userEntity.email!),
+                  const SizedBox(height: 10,),
+                  Text(
+                    state.userEntity.fullName!,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                )
-              ],
-            );
-          }
-
-          if(state is ProfileInfoFailure) {
-            return const Text(
-              'Please try again'
-            );
-          }
-          return Container();
-        }, 
-      ),
+                ],
+              );
+            }
+            if (state is ProfileInfoFailure) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Please try again'),
+                  Text('Error: ${state.message}'),
+                ],
+              );
+            }
+            return Container();
+          },
+        ),
       ),
     );
   }
