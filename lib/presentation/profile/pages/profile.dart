@@ -51,26 +51,6 @@ class ProfilePage extends StatelessWidget {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    height: 90,
-                    width: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: NetworkImage(state.userEntity.imageURL!),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15,),
-                  Text(state.userEntity.email!),
-                  const SizedBox(height: 10,),
-                  Text(
-                    state.userEntity.fullName!,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ],
               );
             }
