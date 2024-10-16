@@ -57,7 +57,7 @@ class AuthFirebaseServiceImpl extends AuthFirebaseService {
       .set(
         {
           'name' : createUserReq.fullName,
-          'email' : data.user?.email,
+          'email' : data.user?.email
         }
       );
 

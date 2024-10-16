@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:spotify_clone/common/helpers/is_dark_mode.dart';
 import 'package:spotify_clone/common/widgets/appbar/app_bar.dart';
+import 'package:spotify_clone/core/configs/constants/app_urls.dart';
 import 'package:spotify_clone/core/configs/theme/app_colors.dart';
 import 'package:spotify_clone/presentation/profile/bloc/profile_info_cubit.dart';
 import 'package:spotify_clone/presentation/profile/bloc/profile_info_state.dart';
@@ -20,7 +21,9 @@ class ProfilePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _profileInfo(context),
-          const SizedBox(height: 30,),
+          const SizedBox(
+            height: 30,
+          ),
         ],
       ),
     );
@@ -51,6 +54,29 @@ class ProfilePage extends StatelessWidget {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Container(
+                    height: 50,
+                    width: 50,
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: NetworkImage(state.userEntity.imageURL!),
+                        )),
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  Text(state.userEntity.email!),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    state.userEntity.fullName!,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
                 ],
               );
             }
